@@ -1,27 +1,6 @@
 import { useDebouncedCallback } from "use-debounce";
 import React, { useState, useRef, useEffect, useLayoutEffect } from "react";
 
-import SendWhiteIcon from "../icons/send-white.svg";
-import BrainIcon from "../icons/brain.svg";
-import RenameIcon from "../icons/rename.svg";
-import ExportIcon from "../icons/share.svg";
-import ReturnIcon from "../icons/return.svg";
-import CopyIcon from "../icons/copy.svg";
-import LoadingIcon from "../icons/three-dots.svg";
-import PromptIcon from "../icons/prompt.svg";
-import MaskIcon from "../icons/mask.svg";
-import MaxIcon from "../icons/max.svg";
-import MinIcon from "../icons/min.svg";
-import ResetIcon from "../icons/reload.svg";
-import BreakIcon from "../icons/break.svg";
-import SettingsIcon from "../icons/chat-settings.svg";
-
-import LightIcon from "../icons/light.svg";
-import DarkIcon from "../icons/dark.svg";
-import AutoIcon from "../icons/auto.svg";
-import BottomIcon from "../icons/bottom.svg";
-import StopIcon from "../icons/pause.svg";
-
 import {
   ChatMessage,
   SubmitKey,
@@ -48,23 +27,52 @@ import { ChatControllerPool } from "../client/controller";
 import { Prompt, usePromptStore } from "../store/prompt";
 import Locale from "../locales";
 
-import { IconButton } from "./button";
 import styles from "./home.module.scss";
 import chatStyle from "./chat.module.scss";
 
-import { ListItem, Modal } from "./ui-lib";
 import { useLocation, useNavigate } from "react-router-dom";
 import { LAST_INPUT_KEY, Path, REQUEST_TIMEOUT_MS } from "../constant";
-import { Avatar } from "./emoji";
-import { MaskAvatar, MaskConfig } from "./mask";
+import { MaskConfig } from "./mask";
+import {
+  Avatar,
+  MaskAvatar,
+  ExportMessageModal,
+  ListItem,
+  Modal,
+  IconButton,
+} from "../components";
 import { useMaskStore } from "../store/mask";
 import { useCommand } from "../command";
 import { prettyObject } from "../utils/format";
-import { ExportMessageModal } from "./exporter";
+import {
+  AutoIcon,
+  BottomIcon,
+  BrainIcon,
+  BreakIcon,
+  CopyIcon,
+  DarkIcon,
+  EditIcon,
+  ExportIcon,
+  LightIcon,
+  LoadingIcon,
+  MaskIcon,
+  MaxIcon,
+  MinIcon,
+  PauseIcon,
+  PromptIcon,
+  ReloadIcon,
+  RenameIcon,
+  ReturnIcon,
+  SendWhiteIcon,
+  SettingsIcon,
+} from "../icons";
 
-const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
-  loading: () => <LoadingIcon />,
-});
+const Markdown = dynamic(
+  async () => (await import("../components/markdown")).Markdown,
+  {
+    loading: () => <LoadingIcon />,
+  },
+);
 
 export function SessionConfigModel(props: { onClose: () => void }) {
   const chatStore = useChatStore();
@@ -80,7 +88,7 @@ export function SessionConfigModel(props: { onClose: () => void }) {
         actions={[
           <IconButton
             key="reset"
-            icon={<ResetIcon />}
+            icon={<ReloadIcon />}
             bordered
             text={Locale.Chat.Config.Reset}
             onClick={() => {
@@ -280,8 +288,9 @@ function ClearContextDivider() {
 }
 
 function ChatAction(props: {
-  text: string;
+  text: string | JSX.Element;
   icon: JSX.Element;
+  children?: React.ReactNode;
   onClick: () => void;
 }) {
   const iconRef = useRef<HTMLDivElement>(null);
@@ -325,6 +334,7 @@ function ChatAction(props: {
       </div>
       <div className={chatStyle["text"]} ref={textRef}>
         {props.text}
+        {props.children}
       </div>
     </div>
   );
@@ -380,21 +390,21 @@ export function ChatActions(props: {
 
   return (
     <div className={chatStyle["chat-input-actions"]}>
-      {couldStop && (
+      {couldStop && ( // stop all
         <ChatAction
           onClick={stopAll}
           text={Locale.Chat.InputActions.Stop}
-          icon={<StopIcon />}
+          icon={<PauseIcon />}
         />
       )}
-      {!props.hitBottom && (
+      {!props.hitBottom && ( // scroll to bottom
         <ChatAction
           onClick={props.scrollToBottom}
           text={Locale.Chat.InputActions.ToBottom}
           icon={<BottomIcon />}
         />
       )}
-      {props.hitBottom && (
+      {props.hitBottom && ( // settings
         <ChatAction
           onClick={props.showPromptModal}
           text={Locale.Chat.InputActions.Settings}
@@ -402,7 +412,7 @@ export function ChatActions(props: {
         />
       )}
 
-      <ChatAction
+      <ChatAction // theme
         onClick={nextTheme}
         text={Locale.Chat.InputActions.Theme[theme]}
         icon={
@@ -418,7 +428,7 @@ export function ChatActions(props: {
         }
       />
 
-      <ChatAction
+      <ChatAction // prompt hints
         onClick={props.showPromptHints}
         text={Locale.Chat.InputActions.Prompt}
         icon={<PromptIcon />}
@@ -446,6 +456,23 @@ export function ChatActions(props: {
           });
         }}
       />
+
+      <ChatAction
+        onClick={() => {}}
+        text={Locale.Chat.InputActions.Knowledge}
+        icon={<EditIcon />}
+      >
+        <input
+          type="checkbox"
+          checked={false}
+          onChange={
+            (e) => {}
+            // props.updateConfig(
+            //   (config) => (config.sendMemory = e.currentTarget.checked),
+            // )
+          }
+        />
+      </ChatAction>
     </div>
   );
 }

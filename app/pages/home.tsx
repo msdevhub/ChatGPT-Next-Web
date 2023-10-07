@@ -6,14 +6,13 @@ import { useState, useEffect } from "react";
 
 import styles from "./home.module.scss";
 
-import BotIcon from "../icons/bot.svg";
-import LoadingIcon from "../icons/three-dots.svg";
+import { BotIcon, LoadingIcon } from "../icons";
 
 import { getCSSVar, useMobileScreen } from "../utils";
 
 import dynamic from "next/dynamic";
 import { Path, SlotID } from "../constant";
-import { ErrorBoundary } from "./error";
+import { ErrorBoundary } from "../components/error";
 
 import {
   HashRouter as Router,
@@ -21,9 +20,10 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-import { SideBar } from "./sidebar";
+import { SideBar } from "../components/sidebar";
 import { useAppConfig } from "../store/config";
-import { AuthPage } from "./auth";
+import { AuthPage } from "../components/auth";
+import { useAccessStore } from "../store";
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -33,6 +33,10 @@ export function Loading(props: { noLogo?: boolean }) {
     </div>
   );
 }
+
+const Plugins = dynamic(async () => await import("./plugins"), {
+  loading: () => <Loading noLogo />,
+});
 
 const Settings = dynamic(async () => (await import("./settings")).Settings, {
   loading: () => <Loading noLogo />,
@@ -104,6 +108,8 @@ function Screen() {
   const location = useLocation();
   const isHome = location.pathname === Path.Home;
   const isAuth = location.pathname === Path.Auth;
+  const access = useAccessStore();
+
   const isMobileScreen = useMobileScreen();
 
   useEffect(() => {
@@ -121,7 +127,7 @@ function Screen() {
         }`
       }
     >
-      {isAuth ? (
+      {!access.isAuthorized() ? (
         <>
           <AuthPage />
         </>
@@ -136,6 +142,7 @@ function Screen() {
               <Route path={Path.Masks} element={<MaskPage />} />
               <Route path={Path.Chat} element={<Chat />} />
               <Route path={Path.Settings} element={<Settings />} />
+              <Route path={Path.Plugins} element={<Plugins />} />
             </Routes>
           </div>
         </>
